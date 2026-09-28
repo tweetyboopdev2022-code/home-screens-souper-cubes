@@ -1,0 +1,82 @@
+{
+  "id": "souper-cubes",
+  "name": "Souper Cubes",
+  "version": "1.0.0",
+  "description": "Freezer tally of ready-made meals: tap a meal to take one cube out, + to add cubes after a batch. Meals at zero move to 'To batch make'. Stored in a Todoist project so phones can update it too.",
+  "author": "Tanya",
+  "license": "MIT",
+  "minAppVersion": "1.7.1",
+  "moduleType": "souper-cubes",
+  "category": "Family",
+  "icon": "Snowflake",
+  "defaultConfig": {
+    "projectName": "Souper Cubes",
+    "title": "Souper Cubes",
+    "lowAt": 1,
+    "accentColor": "#0891b2"
+  },
+  "defaultSize": {
+    "w": 1000,
+    "h": 560
+  },
+  "defaultStyle": {
+    "fontSize": 18,
+    "padding": 28,
+    "borderRadius": 28
+  },
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "title": "Title",
+        "ui:widget": "text",
+        "ui:group": "Content"
+      },
+      "projectName": {
+        "type": "string",
+        "title": "Todoist project",
+        "ui:widget": "text",
+        "ui:group": "Content",
+        "description": "Created automatically if missing. Each task is a meal: 'Chili (4)'."
+      },
+      "lowAt": {
+        "type": "number",
+        "title": "Show as running low at",
+        "ui:widget": "slider",
+        "ui:group": "Content",
+        "minimum": 0,
+        "maximum": 5,
+        "ui:step": 1
+      },
+      "accentColor": {
+        "type": "string",
+        "title": "Accent colour",
+        "ui:widget": "color",
+        "ui:group": "Look"
+      }
+    }
+  },
+  "exports": {
+    "component": "default"
+  },
+  "dataRequirements": [],
+  "prefetchUrl": null,
+  "permissions": [
+    "network",
+    "secrets",
+    "storage"
+  ],
+  "secrets": [
+    {
+      "key": "todoist_token",
+      "label": "Todoist API token",
+      "description": "Todoist → Settings → Integrations → Developer → API token.",
+      "required": true,
+      "placeholder": "Your Todoist API token"
+    }
+  ],
+  "allowedDomains": [
+    "api.todoist.com"
+  ]
+}
