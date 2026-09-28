@@ -1,8 +1,8 @@
 {
   "id": "souper-cubes",
   "name": "Souper Cubes",
-  "version": "1.0.0",
-  "description": "Freezer tally of ready-made meals: tap a meal to take one cube out, + to add cubes after a batch. Meals at zero move to 'To batch make'. Stored in a Todoist project so phones can update it too.",
+  "version": "1.1.0",
+  "description": "Freezer tally of ready-made meals: tap a meal to take one cube out, + to add cubes after a batch. Meals at zero move to 'To batch make'. Reminds you to take a cube out to thaw when a planned meal matches. Stored in a Todoist project so phones can update it too.",
   "author": "Tanya",
   "license": "MIT",
   "minAppVersion": "1.7.1",

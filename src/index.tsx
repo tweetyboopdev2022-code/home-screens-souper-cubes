@@ -103,6 +103,23 @@ export default function SouperCubes({ config, style }: PluginComponentProps) {
   const btn = (extra: React.CSSProperties = {}): React.CSSProperties => ({
     appearance: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', background: ink(0.06), borderRadius: '0.5em', ...extra,
   });
+  // thaw reminders: planned meals (today / tomorrow) that match something in the freezer
+  const useFetchData = sdk()?.useFetchData;
+  const [plan] = useFetchData ? useFetchData('/api/meals/data', 300000) as [any, any] : [null];
+  const dk = (off: number) => new Date(Date.now() + off * 86400000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9àâçéèêëîïôûùüÿñæœ ]/g, '').trim();
+  const [thawed, setThawed] = React.useState<Set<string>>(() => { try { return new Set(JSON.parse(localStorage.getItem('souper-cubes:thawed') || '[]')); } catch { return new Set(); } });
+  const markThawed = (k: string) => setThawed((t) => { const n = new Set(t).add(k); try { localStorage.setItem('souper-cubes:thawed', JSON.stringify([...n].slice(-40))); } catch { /* ignore */ } return n; });
+  const thaws = [0, 1].flatMap((off) => {
+    const d = dk(off);
+    return (plan?.plan ?? []).filter((x: any) => x.date === d).map((x: any) => {
+      const name = x.mealId ? (plan?.savedMeals ?? []).find((s: any) => s.id === x.mealId)?.name : x.customText;
+      if (!name) return null;
+      const m = (meals ?? []).find((c) => c.count > 0 && (norm(c.name) === norm(name) || norm(name).includes(norm(c.name)) || norm(c.name).includes(norm(name))));
+      const key = `${d}|${x.slot}|${m?.id}`;
+      return m && !thawed.has(key) ? { m, key, when: off === 0 ? `today’s ${x.slot}` : `tomorrow’s ${x.slot}` } : null;
+    }).filter(Boolean) as { m: Meal; key: string; when: string }[];
+  });
   const stocked = (meals ?? []).filter((m) => m.count > 0).sort((a, b) => a.name.localeCompare(b.name));
   const toMake = (meals ?? []).filter((m) => m.count <= 0).sort((a, b) => a.name.localeCompare(b.name));
   const total = stocked.reduce((a, m) => a + m.count, 0);
@@ -118,6 +135,14 @@ export default function SouperCubes({ config, style }: PluginComponentProps) {
         </button>
       </div>
       <div style={{ height: 1, background: ink(0.08), margin: '0.6em 0 0.7em' }} />
+      {thaws.slice(0, 2).map(({ m, key, when }) => (
+        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.6em', padding: '0.45em 0.5em 0.45em 0.8em', marginBottom: '0.55em', borderRadius: '0.7em', background: `color-mix(in srgb, ${accent} 14%, transparent)`, fontSize: '0.8em' }}>
+          <Icon d={SNOW} size="1.2em" stroke={2} style={{ color: accent }} />
+          <span style={{ flex: 1, minWidth: 0 }}><b style={{ fontWeight: 600 }}>Take out {m.name}</b><span style={{ opacity: 0.65 }}> to thaw for {when}</span></span>
+          <button onClick={() => { take(m); markThawed(key); }} style={btn({ padding: '0.35em 0.8em', borderRadius: '999px', background: accent, color: '#fff', fontWeight: 600, fontSize: '0.9em', whiteSpace: 'nowrap' })}>Took it out</button>
+          <button onClick={() => markThawed(key)} aria-label="Dismiss" style={btn({ background: 'transparent', padding: '0.2em', opacity: 0.4, display: 'flex' })}><Icon d={I.x} size="0.9em" /></button>
+        </div>
+      ))}
 
       {error ? <div style={{ margin: 'auto', fontSize: '0.8em', opacity: 0.6 }}>{error}</div> : !meals ? <div style={{ margin: 'auto', opacity: 0.4, fontSize: '0.8em' }}>Loading…</div> : (
         <>
