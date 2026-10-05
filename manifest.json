@@ -1,7 +1,7 @@
 {
   "id": "souper-cubes",
   "name": "Souper Cubes",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Freezer tally of ready-made meals: tap a meal to take one cube out, + to add cubes after a batch. Meals at zero move to 'To batch make'. Reminds you to take a cube out to thaw when a planned meal matches. Stored in a Todoist project so phones can update it too.",
   "author": "Tanya",
   "license": "MIT",
@@ -13,7 +13,9 @@
     "projectName": "Souper Cubes",
     "title": "Souper Cubes",
     "lowAt": 1,
-    "accentColor": "#0891b2"
+    "accentColor": "#0891b2",
+    "groceryProject": "Groceries",
+    "groceryStore": "IGA"
   },
   "defaultSize": {
     "w": 1000,
@@ -54,6 +56,18 @@
         "title": "Accent colour",
         "ui:widget": "color",
         "ui:group": "Look"
+      },
+      "groceryProject": {
+        "type": "string",
+        "title": "Grocery list (Todoist project)",
+        "ui:widget": "text",
+        "ui:group": "Content"
+      },
+      "groceryStore": {
+        "type": "string",
+        "title": "Store label for added items",
+        "ui:widget": "text",
+        "ui:group": "Content"
       }
     }
   },
@@ -71,7 +85,7 @@
     {
       "key": "todoist_token",
       "label": "Todoist API token",
-      "description": "Todoist → Settings → Integrations → Developer → API token.",
+      "description": "Todoist \u2192 Settings \u2192 Integrations \u2192 Developer \u2192 API token.",
       "required": true,
       "placeholder": "Your Todoist API token"
     }

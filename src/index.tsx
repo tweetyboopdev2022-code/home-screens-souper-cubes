@@ -45,6 +45,28 @@ export default function SouperCubes({ config, style }: PluginComponentProps) {
   const [shift, setShift] = React.useState(true);
   const [qty, setQty] = React.useState(4);
   const pending = React.useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Running-low meals can go straight onto the grocery list (Todoist project "Groceries").
+  const groceryProject = String(config.groceryProject || 'Groceries');
+  const groceryStore = String(config.groceryStore ?? 'IGA');
+  const [gid, setGid] = React.useState<string | null>(null);
+  const [onList, setOnList] = React.useState<Set<string>>(new Set());
+  const listName = (n: string) => `${n} ingredients`;
+  const loadList = React.useCallback(async () => {
+    try {
+      let g = gid;
+      if (!g) { const pj = await call(`${API}/projects?limit=200`); const p = (pj.results ?? pj).find((x: any) => String(x.name).toLowerCase() === groceryProject.toLowerCase()); if (!p) return; g = String(p.id); setGid(g); }
+      const tj = await call(`${API}/tasks?project_id=${g}&limit=200`);
+      setOnList(new Set((tj.results ?? tj).map((t: any) => String(t.content).trim().toLowerCase())));
+    } catch { /* leave as is */ }
+  }, [gid, groceryProject]);
+  React.useEffect(() => { loadList(); const id = setInterval(loadList, 120000); return () => clearInterval(id); }, [loadList]);
+  const addToList = async (m: Meal) => {
+    if (!gid) { setToast({ text: `No “${groceryProject}” list found` }); return; }
+    const content = listName(m.name);
+    setOnList((s) => new Set(s).add(content.toLowerCase()));
+    try { await call(`${API}/tasks`, 'POST', { content, project_id: gid, ...(groceryStore ? { labels: [groceryStore] } : {}) }); setToast({ text: `${content} added to the grocery list` }); }
+    catch { setOnList((s) => { const n = new Set(s); n.delete(content.toLowerCase()); return n; }); setToast({ text: 'Couldn’t add to the grocery list' }); }
+  };
 
   const load = React.useCallback(async () => {
     try {
@@ -159,6 +181,10 @@ export default function SouperCubes({ config, style }: PluginComponentProps) {
                     <span style={{ fontSize: '0.8em', fontWeight: 500, lineHeight: 1.2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', paddingRight: '1.4em' } as React.CSSProperties}>{m.name}</span>
                     {low && <span style={{ fontSize: '0.55em', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#d97706' }}>Running low</span>}
                   </button>
+                  {low && (onList.has(listName(m.name).toLowerCase())
+                    ? <span style={{ position: 'absolute', bottom: '0.45em', right: '0.5em', fontSize: '0.58em', fontWeight: 600, opacity: 0.7 }}>🛒 On list</span>
+                    : <button onClick={() => addToList(m)} aria-label={`Add ${m.name} to the grocery list`}
+                        style={btn({ position: 'absolute', bottom: '0.4em', right: '0.4em', padding: '0.25em 0.55em', borderRadius: '999px', fontSize: '0.6em', fontWeight: 700, background: '#d97706', color: '#fff' })}>🛒 Add to list</button>)}
                   <button onClick={() => setCount(m.id, +1)} aria-label={`Add a cube of ${m.name}`}
                     style={btn({ position: 'absolute', top: '0.45em', right: '0.45em', width: '1.6em', height: '1.6em', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg, boxShadow: `0 0 0 1px ${ink(0.1)}` })}>
                     <Icon d={I.plus} size="0.8em" stroke={2.5} />
